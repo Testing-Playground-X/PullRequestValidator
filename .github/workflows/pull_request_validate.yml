@@ -1,0 +1,33 @@
+# Name of the workflow
+name: Pull Request Validator
+
+# Controls when the workflow will run
+on:
+  pull_request:
+    types: [ opened, reopened, edited, assigned, unassigned, synchronize ]
+
+# Setting up the environment variables for it to be able to comment on the pull request
+env:
+  GH_TOKEN: ${{ github.token }}
+  ERROR_FLAG: 0
+
+# Cancel other older ongoing runs of this action, when new one is triggered
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "check-pr"
+  check-pr:
+    # The type of runner that the job will run on
+    runs-on: windows-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Runs single line command using the runners shell (powershell for windows)
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Execute action
+        run: gh pr comment ${{ github.event.number }} --body "Action successfully executed"

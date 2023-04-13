@@ -1,0 +1,8 @@
+Your Pull Request title is incorrect. Please follow the correct title convention:
+
+STORY-TEAM: DESCRIPTION
+
+DESCRIPTION must immediately follow the space after the colon. The description is a short summary of the code changes.
+
+EXAMPLE:
+    US123456-TEAMX: Fix performance issues
