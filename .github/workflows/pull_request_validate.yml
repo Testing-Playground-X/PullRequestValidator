@@ -1,0 +1,57 @@
+# Name of the workflow
+name: Pull Request Validator
+
+# Controls when the workflow will run
+on:
+  pull_request:
+    types: [ opened, reopened, edited, assigned, unassigned, synchronize ]
+
+# Setting up the environment variables for it to be able to comment on the pull request
+env:
+  ERROR_FLAG: 0
+
+# Cancel other older ongoing runs of this action, when new one is triggered
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "check-pr"
+  check-pr:
+    # The type of runner that the job will run on
+    runs-on: self-hosted
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Runs single line command using the runners shell (powershell for windows)
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - uses: izhangzhihao/delete-comment@master
+        with: 
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          delete_user_name: github-actions[bot]
+          issue_number: ${{ github.event.number }}  # remove BOT's comments from the current PR
+
+      - name: Validate Title
+        run: |
+          if ( "${{ github.event.pull_request.title }}" -cnotmatch '^(F|US|DE)[0-9]+-[A-Z]+:.{10,}' ) {
+            gh pr comment ${{ github.event.number }} --body-file .github\comments\bad-title.txt
+            echo "ERROR_FLAG=1" >> $env:GITHUB_ENV }
+
+      - name: Validate Description
+        run: |
+          if ( ("${{ github.event.pull_request.body }}".length -lt 10) -or ("${{ github.event.pull_request.body }}" -like "*${{ github.event.pull_request.title }}*") ) {
+            gh pr comment ${{ github.event.number }} --body-file .github/comments/bad-description.txt
+            echo "ERROR_FLAG=1" >> $env:GITHUB_ENV }
+
+      - name: Validate Assignee
+        run: |
+          if ( "${{github.event.pull_request.assignee.id}}" -eq "") {
+            gh pr comment ${{ github.event.number }} --body-file .github/comments/bad-assignee.txt
+            echo "ERROR_FLAG=1" >> $env:GITHUB_ENV }
+
+      - name: Check for errors
+        if: env.ERROR_FLAG != '0'
+        run: exit 1
