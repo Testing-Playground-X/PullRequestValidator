@@ -8,6 +8,7 @@ on:
 
 # Setting up the environment variables for it to be able to comment on the pull request
 env:
+  GH_TOKEN: ${{ github.token }}
   ERROR_FLAG: 0
 
 # Cancel other older ongoing runs of this action, when new one is triggered
