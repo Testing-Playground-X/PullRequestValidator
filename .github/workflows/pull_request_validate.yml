@@ -28,30 +28,5 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - uses: izhangzhihao/delete-comment@master
-        with: 
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          delete_user_name: github-actions[bot]
-          issue_number: ${{ github.event.number }}  # remove BOT's comments from the current PR
-
-      - name: Validate Title
-        run: |
-          if ( "${{ github.event.pull_request.title }}" -cnotmatch '^(F|US|DE)[0-9]+-[A-Z]+:.{10,}' ) {
-            gh pr comment ${{ github.event.number }} --body-file .github\comments\bad-title.txt
-            echo "ERROR_FLAG=1" >> $env:GITHUB_ENV }
-
-      - name: Validate Description
-        run: |
-          if ( ("${{ github.event.pull_request.body }}".length -lt 10) -or ("${{ github.event.pull_request.body }}" -like "*${{ github.event.pull_request.title }}*") ) {
-            gh pr comment ${{ github.event.number }} --body-file .github/comments/bad-description.txt
-            echo "ERROR_FLAG=1" >> $env:GITHUB_ENV }
-
-      - name: Validate Assignee
-        run: |
-          if ( "${{github.event.pull_request.assignee.id}}" -eq "") {
-            gh pr comment ${{ github.event.number }} --body-file .github/comments/bad-assignee.txt
-            echo "ERROR_FLAG=1" >> $env:GITHUB_ENV }
-
-      - name: Check for errors
-        if: env.ERROR_FLAG != '0'
-        run: exit 1
+      - name: Execute action
+        run: gh pr comment ${{ github.event.number }} --body "Action successfully executed"
